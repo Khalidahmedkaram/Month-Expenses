@@ -1,29 +1,748 @@
-Implement a program that stores for each month the expenses (class)
-for this month.
-For each of the expenses:
-Name of item bought
-Date of buying
-Price
-Amount of money spent
-Amount of money remaining
-Category of the item
-Example:
-The item is Chair, category: furniture, bought on 11/3/2019, its total
-price is 3500 LE, amount of money spent 1500 LE and the remaining
-amount is 2000 LE.
-The user should be able to:
-1. Add new expenses.
-2. Delete any of the expenses.
-3. Edit any of the expenses.
-4. Store the expenses of each month together, such that the user can
-search for the expenses per month.
-Store the expenses of each category together, such
-that the user can search for the expenses of each
-category per a certain month.
-6. Display
-a. total amount of money spent per month (for all categories).
-b. total amount of money spent per month per category
-c. total amount of money remaining
-d. total amount (spent + remaining)
-Note: You mush implement the suitable Data Structure and use it
-to store your expenses per month per category.
+#pragma once
+#include<iostream>
+#include"string"
+#include<map>
+#include<vector>
+using namespace std;
+class MonthExpenses
+{
+	string name;
+	int day, month, year;
+	float price;
+	float moneyremaining;
+	float moneyspent;
+	float allremaingmoney;
+	string category;
+	float moneySpentAndRemaining;
+public:
+	MonthExpenses();
+	MonthExpenses(string, int, int, int, float, float, float, float, string);
+	void Add();
+	void edit();
+	void search();
+	void displaytotalremaining();
+	void displayMoneySpentPerMonth();
+	void displayMoneySpendAndRemaining();
+	void displayMoneySpendPerCategory();
+	void remove();
+	bool FindStr(string);
+	bool FindInt(int);
+	void statistics();
+	void AnalomyDetection();
+};
+___________________________________________________________________________________________________________________________________________
+#include "MonthExpenses.h"
+#include<iostream>
+#include<map>
+#include<vector>
+#include<string>
+#include<algorithm>
+#include<utility>
+using namespace std;
+map<int, vector<MonthExpenses>>mp;
+map<int, vector<MonthExpenses>>::iterator it;
+vector<MonthExpenses> Vec;
+vector<MonthExpenses>::iterator Vecit;
+MonthExpenses::MonthExpenses()
+{
+	name = " ";
+	day = month = year = 0;
+	price = 0;
+	moneyremaining = 0;
+	moneyspent = 0;
+	category = " ";
+	allremaingmoney = 0;
+	moneySpentAndRemaining = 0;
+}
+MonthExpenses::MonthExpenses(string n, int d, int m, int y, float p, float moneyrem, float moneysp, float, string categ)
+{
+	name = n;
+	day = d;
+	month = m;
+	year = y;
+	price = p;
+	moneyremaining = moneyrem;
+	moneyspent = moneysp;
+	allremaingmoney = 0;
+	category = categ;
+
+}
+void MonthExpenses::Add()
+{
+	MonthExpenses M;
+	char check;
+	do {
+		cout << "Please Enter name of item:   ";
+		cin >> name;
+		cout << "Enter date (day/month/year):   ";
+		cin >> day;
+		cin >> month;
+		cin >> year;
+		if ((month > 12) || (month < 1))
+		{
+			cout << " Invalid month " << endl;
+			cout << " Enter month again " << endl;
+			cin >> month;
+
+		}
+		if ((day > 31) || (day < 1))
+		{
+			cout << " Invalid day " << endl;
+			cout << " Enter day again" << endl;
+			cin >> day;
+		}
+		cout << "Enter Price :   ";
+		cin >> price;
+		if (price < 0) {
+			cout << "Invalid entry\n";
+			cout << "Enter Price:\n";
+			cin >> price;
+		}
+		cout << "Enter money remaining:   ";
+		cin >> moneyremaining;
+		if ((moneyremaining < 0) || (moneyremaining > price)) {
+			cout << "Invalid entry\n";
+			cout << "Enter money remaining:\n";
+			cin >> moneyremaining;
+		}
+		allremaingmoney += moneyremaining;
+		moneySpentAndRemaining += moneyremaining;
+		cout << "Enter money spent:   ";
+		cin >> moneyspent;
+		if ((moneyspent < 0) || (moneyspent > price)) {
+			cout << "Invalid entry\n";
+			cout << "Enter money spent:\n";
+			cin >> moneyspent;
+		}
+		moneySpentAndRemaining += moneyspent;
+		cout << "Enter category:   ";
+		cin >> category;
+		cout << "Do you want to add more expenses in this month ?  (y/n)" << endl;
+		cin >> check;
+		M.name = name;
+		M.day = day;
+		M.month = month;
+		M.year = year;
+		M.price = price;
+		M.moneyremaining = moneyremaining;
+		M.moneyspent = moneyspent;
+		M.category = category;
+		Vec.push_back(M);
+		mp.insert(make_pair(month, Vec));
+
+	} while (check == 'y' || check == 'Y');
+}
+void MonthExpenses::remove()
+{
+
+	int monthremove, choice;
+	string nameremove;
+	cout << " Press (1) if you want to remove object  Press (2) if you want to remove expenses of whole month\n" << endl;
+	cin >> choice;
+	if ((choice != 1) && (choice != 2))
+	{
+		cout << "Invalid entry\n";
+		cout << " Press (1) if you want to remove object  Press(2) if you want to remove expenses of whole month\n" << endl;
+		cin >> choice;
+	}
+	if (choice == 1)
+	{
+		cout << "Enter the month you want to remove in " << endl;
+		cin >> monthremove;
+		if (!FindInt(monthremove))
+		{
+			cout << "The month you entered has no expenses, Please enter month again:\n";
+			cin >> monthremove;
+		}
+		if ((monthremove > 12) || (monthremove < 1))
+		{
+			cout << " Invalid month " << endl;
+			cout << " Enter month again " << endl;
+			cin >> monthremove;
+		}
+		cout << "Enter the name of the object you want to remove" << endl;
+		cin >> nameremove;
+		//CHECK FOR THE NAME EXISTENCE
+		if (!FindStr(nameremove))
+		{
+			cout << "Name you entered dosn't exist, Please enter name again:\n";
+			cin >> nameremove;
+		}
+
+		for (it = mp.begin(); it != mp.end(); it++)
+		{
+			if (it->first == monthremove)
+			{
+				for (int i = 0; i < Vec.size(); i++)
+				{
+					if (Vec[i].name == nameremove)
+					{
+						int index = i;
+						for (int j = index; j < Vec.size(); j++)
+						{
+							swap(Vec[index], Vec[j]);
+						}
+					}
+				}
+			}
+		}
+		float x = Vec.back().moneyremaining;
+		float y = Vec.back().moneyspent;
+		float z = Vec.back().price;
+		allremaingmoney -= x;
+		moneySpentAndRemaining -= y;
+			moneySpentAndRemaining -= x;
+		price -= z;
+		Vec.pop_back();
+		cout << " Object : " << nameremove << " has been removed successfully " << endl;
+		cout << endl;
+	}
+	if (choice == 2)
+	{
+		cout << "Enter the month you want to remove its expenses " << endl;
+		cin >> monthremove;
+		if (!FindInt(monthremove))
+		{
+			cout << "The month you entered has no expenses, Please enter month again:\n";
+			cin >> monthremove;
+		}
+		if ((monthremove > 12) || (monthremove < 1))
+		{
+			cout << " Invalid month " << endl;
+			cout << " Enter month again " << endl;
+			cin >> monthremove;
+		}
+		mp.erase(monthremove);
+		cout << " Month : " << monthremove << " has been removed successfully " << endl;
+		cout << endl;
+	}
+}
+void MonthExpenses::displayMoneySpentPerMonth()
+{
+	float x = 0;
+	int monthdisplay;
+	cout << "Enter the month you want to display its money spent " << endl;
+	cin >> monthdisplay;
+	for (it = mp.begin(); it != mp.end(); it++)
+	{
+		x = 0;
+
+		for (int i = 0; i < Vec.size(); i++)
+		{
+			if (Vec[i].month == monthdisplay)
+				x += Vec[i].moneyspent;
+		}break;
+	}
+	cout << "Money spent in month " << monthdisplay << " is " << x << endl;
+
+}
+void MonthExpenses::displayMoneySpendPerCategory()
+{
+
+
+	float y = 0;
+	string categorydisplay;
+	int monthdisplay;
+	cout << "Enter the month you want to display its money spent " << endl;
+	cin >> monthdisplay;
+	cout << "Enter category you want to display its money spent " << endl;
+	cin >> categorydisplay;
+
+	for (it = mp.begin(); it != mp.end(); it++)
+	{
+		y = 0;
+		for (int i = 0; i < Vec.size(); i++)
+		{
+			if ((Vec[i].month == monthdisplay) && (Vec[i].category == categorydisplay))
+			{
+				y += Vec[i].moneyspent;
+
+			}
+		}
+	}
+	cout << "Money spent on Category : " << categorydisplay << " " << " in Month " << monthdisplay << " is " << y << endl;
+
+}
+void MonthExpenses::displaytotalremaining()
+{
+	cout << " All remaining money " << allremaingmoney << endl;
+}
+void MonthExpenses::displayMoneySpendAndRemaining()
+{
+	cout << " All money spend and remaining " << moneySpentAndRemaining << endl;
+}
+void MonthExpenses::edit()
+{
+	string oldname, oldcategory, newname, newcategory;
+	int oldday, oldmonth, oldyear, newday, newmonth, newyear;
+	float oldprice, oldmoneyremaining, oldmoneyspend, newprice, newmoneyremaining, newmoneyspend;
+	int monthedit, choice;
+
+	cout << "Enter the month you want to edit in its expenses " << endl;
+	cin >> monthedit;
+	if (!FindInt(monthedit))
+	{
+		cout << "The month you entered has no expenses, Please enter month again:\n";
+		cin >> monthedit;
+	}
+	if ((monthedit > 12) || (monthedit < 1))
+	{
+		cout << " Invalid month " << endl;
+		cout << " Enter month again " << endl;
+		cin >> monthedit;
+	}
+	for (it = mp.begin(); it != mp.end(); it++)
+	{
+		if (it->first == monthedit)
+		{
+			cout << " Press\n(1) to edit in name\n" <<
+				"(2) to edit in date\n" <<
+				"(3) to edit in price\n" <<
+				"(4) to edit in money remaining\n" <<
+				"(5) to edit in money spend\n" <<
+				"(6) to edit in category \n\n";
+			cin >> choice;
+			if ((choice != 1) && (choice != 2) && (choice != 3) && (choice != 4) && (choice != 5) && (choice != 6))
+			{
+				cout << "Invalid entry, Please enter your choice again\n";
+				cin >> choice;
+			}
+			else if (choice == 1)
+			{
+				//CHECK FOR THE NAME EXISTANCE
+				cout << "Enter the old name " << endl;
+				cin >> oldname;
+				if (!FindStr(oldname))
+				{
+					cout << "The name you entered isn't found, Please enter name again:\n";
+					cin >> oldname;
+				}
+				cout << "Enter the new name " << endl;
+				cin >> newname;
+				for (int i = 0; i < Vec.size(); i++)
+				{
+					if (Vec[i].name == oldname)
+						Vec[i].name = newname;
+				}
+			}
+
+			if (choice == 2)
+			{
+				cout << "Enter the old date " << endl;
+				cin >> oldday >> oldmonth >> oldyear;
+				if (!FindInt(oldmonth))
+				{
+					cout << "The month you entered doesn't exist, Please enter month again:\n";
+					cin >> oldmonth;
+				}
+				if ((oldday < 1) || (oldday > 31) || (oldmonth < 1) || (oldmonth > 12))
+				{
+					cout << "Invalid entry, Please enter date again\n";
+					cin >> oldday >> oldmonth >> oldyear;
+				}
+				cout << "Enter the new date " << endl;
+				cin >> newday >> newmonth >> newyear;
+				if ((newday < 1) || (newday > 31) || (newmonth < 1) || (newmonth > 12))
+				{
+					cout << "Invalid entry, Please enter date again\n";
+					cin >> newday >> newmonth >> newyear;
+				}
+				for (int i = 0; i < Vec.size(); i++)
+				{
+					if ((Vec[i].day == oldday) && (Vec[i].month == oldmonth) && (Vec[i].year == oldyear))
+					{
+						Vec[i].day = newday;
+						Vec[i].month = newmonth;
+						Vec[i].year = newyear;
+					}
+				}
+			
+			}
+			if (choice == 3)
+			{
+				cout << "Enter the old price" << endl;
+				cin >> oldprice;
+				if (oldprice < 0)
+				{
+					cout << "Invalid entry, please enter price again\n";
+					cin >> oldprice;
+				}
+				cout << "Enter the new price" << endl;
+				cin >> newprice;
+				if (newprice < 0)
+				{
+					cout << "Invalid entry, please enter price again\n";
+					cin >> newprice;
+				}
+				for (int i = 0; i < Vec.size(); i++)
+				{
+					if (Vec[i].price == oldprice)
+						Vec[i].price = newprice;
+				}
+			}
+			if (choice == 4)
+			{
+				cout << "Enter the old money remaining" << endl;
+				cin >> oldmoneyremaining;
+				if (oldmoneyremaining < 0)
+				{
+					cout << "Invalid entry, please enter price again\n";
+					cin >> oldmoneyremaining;
+				}
+				cout << "Enter the new money remaining" << endl;
+				cin >> newmoneyremaining;
+				if (newmoneyremaining < 0)
+				{
+					cout << "Invalid entry, please enter price again\n";
+					cin >> newmoneyremaining;
+				}
+				for (int i = 0; i < Vec.size(); i++)
+				{
+					if (Vec[i].moneyremaining == oldmoneyremaining)
+						Vec[i].moneyremaining = newmoneyremaining;
+				}
+
+			}
+			if (choice == 5)
+			{
+				cout << "Enter the old money spent" << endl;
+				cin >> oldmoneyspend;
+				if (oldmoneyspend < 0)
+				{
+					cout << "Invalid entry, please enter old money again\n";
+					cin >> oldmoneyspend;
+				}
+				cout << "Enter the new money spent" << endl;
+				cin >> newmoneyspend;
+				if (newmoneyspend < 0)
+				{
+					cout << "Invalid entry, please enter new money again\n";
+					cin >> newmoneyspend;
+				}
+				for (int i = 0; i < Vec.size(); i++)
+				{
+					if (Vec[i].moneyspent == oldmoneyspend)
+						Vec[i].moneyspent = newmoneyspend;
+				}
+
+			}
+			if (choice == 6)
+			{
+				cout << "Enter the old category" << endl;
+				cin >> oldcategory;
+				if (!FindStr(oldcategory))
+				{
+					cout << "The category you entered isn't found, Please enter category again:\n";
+					cin >> oldcategory;
+				}
+				cout << "Enter the new category" << endl;
+				cin >> newcategory;
+				for (int i = 0; i < Vec.size(); i++)
+				{
+					if (Vec[i].category == oldcategory)
+						Vec[i].category = newcategory;
+				}
+			}
+		}
+	}
+}
+void MonthExpenses::search()
+{
+	int choice;
+	int monthsearch;
+	string categorysearch;
+	cout << "Press \n(1) to search for expenses in a certain month\n" <<
+		"(2) to search for certain category in a certain month " << endl;
+	cin >> choice;
+	if ((choice != 1) && (choice != 2))
+	{
+		cout << "Invalid entry, Please enter choice again\n";
+		cin >> choice;
+	}
+	if (choice == 1)
+	{
+		cout << "Enter the month you want to search for its expenses " << endl;
+		cin >> monthsearch;
+		if (!FindInt(monthsearch))
+		{
+			cout << "The month you entered has no expenses, Please enter month again:\n";
+			cin >> monthsearch;
+		}
+		if ((monthsearch > 12) || (monthsearch < 1))
+		{
+			cout << " Invalid month " << endl;
+			cout << " Enter month again " << endl;
+			cin >> monthsearch;
+		}
+		for (it = mp.begin(); it != mp.end(); it++)
+		{
+			for (int i = 0; i < Vec.size(); i++)
+			{
+				if (Vec[i].month == monthsearch)
+				{
+					cout << "Name :" << Vec[i].name << endl;
+					cout << "Date :" << Vec[i].day << "/" << Vec[i].month << "/" << Vec[i].year << endl;
+					cout << "Price :" << Vec[i].price << endl;
+					cout << "Money Remaining :" << Vec[i].moneyremaining << endl;
+					cout << "Money Spent :" << Vec[i].moneyspent << endl;
+					cout << "Category :" << Vec[i].category << endl;
+				}
+			}break;
+		}
+	}
+	if (choice == 2)
+	{
+		cout << "Enter the month you want to search for its expenses " << endl;
+		cin >> monthsearch;
+		if (!FindInt(monthsearch))
+		{
+			cout << "The month you entered has no expenses, Please enter month again:\n";
+			cin >> monthsearch;
+		}
+		if ((monthsearch > 12) || (monthsearch < 1))
+		{
+			cout << " Invalid month " << endl;
+			cout << " Enter month again " << endl;
+			cin >> monthsearch;
+		}
+		cout << "Enter the category you want to search for its expenses " << endl;
+		cin >> categorysearch;
+		if (!FindStr(categorysearch))
+		{
+			cout << "The category you entered isn't found, Please enter category again:\n";
+			cin >> categorysearch;
+		}
+		for (it = mp.begin(); it != mp.end(); it++)
+		{
+			for (int i = 0; i < Vec.size(); i++)
+			{
+				if ((Vec[i].month == monthsearch) && (Vec[i].category == categorysearch))
+				{
+					cout << "Name :" << Vec[i].name << endl;
+					cout << "Date :" << Vec[i].day << "/" << Vec[i].month << "/" << Vec[i].year << endl;
+					cout << "Price :" << Vec[i].price << endl;
+					cout << "Money Remaining :" << Vec[i].moneyremaining << endl;
+					cout << "Money Spent :" << Vec[i].moneyspent << endl;
+				}
+			}break;
+		}
+
+	}
+
+}
+bool MonthExpenses::FindStr(string SearchStr)
+{
+	for (Vecit = Vec.begin(); Vecit != Vec.end(); Vecit++)
+	{
+		if (Vecit->name == SearchStr)
+		{
+			return true;
+			break;
+		}
+		else if (Vecit->category == SearchStr)
+		{
+			return true;
+			break;
+		}
+	}	return false;
+}
+bool MonthExpenses::FindInt(int SearchMonth)
+{
+	for (Vecit = Vec.begin(); Vecit != Vec.end(); Vecit++) {
+		if (Vecit->month == SearchMonth)
+		{
+			return true;
+			break;
+		}
+	}
+	return false;
+}
+void MonthExpenses::statistics()
+{
+	system("cls");
+
+	vector<string>categories;
+	vector<string>::iterator itc;
+	vector<pair<string, int>>newvec;
+	int monthdraw;
+	cout << "Enter month you want to draw its chart " << endl;
+	cin >> monthdraw;
+
+	for (it = mp.begin(); it != mp.end(); it++)
+	{
+		if (it->first == monthdraw)
+		{
+			for (int i = 0; i < Vec.size(); i++)
+			{
+				if (Vec[i].month == monthdraw)
+					categories.push_back(Vec[i].category);
+			}
+		}
+	}
+
+	itc = unique(categories.begin(), categories.begin() + categories.size());
+	categories.resize(distance(categories.begin(), itc));
+
+	for (int i = 0; i < categories.size(); i++)
+	{
+		newvec.push_back(make_pair(categories[i], 0));
+	}
+	for (int i = 0; i < Vec.size(); i++)
+	{
+		for (int j = 0; j < newvec.size(); j++)
+		{
+			if (Vec[i].category == newvec[j].first)
+				newvec[j].second += Vec[i].moneyspent;
+		}
+	}
+	cout << " Money spent in all months " << " per / 100 LE" << endl;
+	cout << " - - - - - - - - - - - - - - - - - - - -  - \n";
+	cout << endl;
+	for (int i = 0; i < newvec.size(); i++)
+	{
+		cout << newvec[i].first << " | ";
+		for (int j = 0; j < (newvec[i].second / 100); j++)
+			cout << " * " << "  ";
+		cout << endl;
+		cout << endl;
+	}
+}
+void MonthExpenses::AnalomyDetection()
+{
+
+	system("cls");
+	int first, third, iqr, threshold;
+
+	vector<string>categories;
+	vector<string>::iterator itc;
+	vector<pair<int, string>>newvec;
+	pair<int, string>first_quartile;
+	pair<int, string>third_quartile;
+
+	for (int i = 0; i < Vec.size(); i++)
+	{
+
+		categories.push_back(Vec[i].category);
+	}
+
+	itc = unique(categories.begin(), categories.begin() + categories.size());
+	categories.resize(distance(categories.begin(), itc));
+
+	for (int i = 0; i < categories.size(); i++)
+	{
+		newvec.push_back(make_pair(0, categories[i]));
+	}
+	for (int i = 0; i < Vec.size(); i++)
+	{
+		for (int j = 0; j < newvec.size(); j++)
+		{
+			if (Vec[i].category == newvec[j].second)
+				newvec[j].first += Vec[i].moneyspent;
+		}
+	}
+	sort(newvec.begin(), newvec.end());
+	first = 0.25 * newvec.size() - 1;
+	third = 0.75 * newvec.size() - 1;
+	first_quartile = newvec[first];
+	third_quartile = newvec[third];
+	iqr = third_quartile.first - first_quartile.first;
+	threshold = iqr + third_quartile.first;
+	for (int i = third; i < newvec.size(); i++)
+	{
+		if (newvec[i].first > threshold)
+			cout << "You are spending too much money on " << newvec[i].second << endl;
+	}
+}
+_____________________________________________________________________________________________________________________________________
+#include<iostream>
+#include<map>
+#include<string>
+#include"MonthExpenses.h"
+#include<vector>
+#include<stdlib.h>
+using namespace std;
+MonthExpenses m;
+void display()
+{
+	int num;
+	cout << "Press\n" <<
+		"  (1)to display money spent per month" << endl <<
+		"  (2)to display total amount of money spent per month per category" << endl <<
+		"  (3)to display total amount of money remianing" << endl <<
+		"  (4) to display total amount of money (spent + remaining) " << endl;
+	cin >> num;
+	if ((num != 1) && (num != 2) && (num != 3) && (num != 4))
+	{
+		cout << "Invalid entry" << endl <<
+			"Press\n" <<
+			"  (1)to display money spent per month" << endl <<
+			"  (2)to display total amount of money spent per month per category" << endl <<
+			"  (3)to display total amount of money remianing" << endl <<
+			"  (4) to display total amount of money (spent + remaining) " << endl;
+		cin >> num;
+	}
+	if (num == 1)
+	{
+		m.displayMoneySpentPerMonth();
+	}
+	if (num == 2)
+	{
+		m.displayMoneySpendPerCategory();
+	}
+	if (num == 3)
+	{
+		m.displaytotalremaining();
+	}
+	if (num == 4)
+	{
+		m.displayMoneySpendAndRemaining();
+	}
+}
+int main()
+{
+	system("color HH");
+	int number;
+	do {
+		cout << "Press\n (1) to add\n (2) to edit\n (3) to delete\n (4) to Search\n (5) to display\n (6) to exit\n (7)to draw chart \n (8)to bring IQR \n";
+		cin >> number;
+		if ((number != 1) && (number != 2) && (number != 3) && (number != 4) && (number != 5) && (number != 6) && (number != 7) && (number != 8))
+		{
+			cout << "Invalid entry" << endl <<
+				"Press\n (1) to add\n (2) to edit\n (3) to delete\n (4) to Search\n (5) to display\n (6) to exit\n (7)to draw chart \n (8)to bring IQR \n";
+			cin >> number;
+		}
+
+		else {
+			if (number == 1)
+			{
+				m.Add();
+			}
+			if (number == 2)
+			{
+				m.edit();
+			}
+			if (number == 3)
+			{
+				m.remove();
+			}
+			if (number == 4)
+			{
+				m.search();
+			}
+			if (number == 5)
+			{
+				display();
+			}
+			if (number == 7)
+			{
+				m.statistics();
+			}
+			if (number == 8)
+			{
+				m.AnalomyDetection();
+			}
+		}
+	} while (number != 6);
+	system("pause");
+	return 0;
+}
